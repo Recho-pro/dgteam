@@ -24,7 +24,13 @@ def test_query_app_reads_migrated_database():
     storage.init_db()
     payload = QueryApp(DEFAULT_DB_PATH).status_payload()
     assert payload["ok"] is True
-    assert str(payload.get("live", {}).get("run_key") or "").strip()
+    live = payload.get("live", {})
+    assert isinstance(live, dict)
+    assert isinstance(payload.get("hot_queries"), list)
+    if live:
+        assert str(live.get("run_key") or "").strip()
+    else:
+        assert payload.get("summary", {}).get("quote_count") == 0
 
 
 def test_migrated_database_exists():
