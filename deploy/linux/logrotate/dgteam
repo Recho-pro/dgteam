@@ -1,0 +1,10 @@
+/var/log/dgteam/*.log /var/log/dgteam/*.err.log /var/log/nginx/dgteam*.log {
+    daily
+    rotate 14
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+    create 0640 root root
+}

@@ -1,0 +1,8 @@
+repos:
+  - repo: local
+    hooks:
+      - id: dgteam-encoding-guard
+        name: dgteam encoding guard
+        entry: python scripts/check_encoding.py
+        language: system
+        files: ^(src|scripts|tests|web|docs|config|rules)/|^(README\.md|pyproject\.toml|\.env\.example|\.editorconfig|\.gitattributes)$

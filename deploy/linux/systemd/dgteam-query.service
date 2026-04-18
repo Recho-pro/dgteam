@@ -1,0 +1,19 @@
+[Unit]
+Description=DGTEAM Query API
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/srv/dgteam
+EnvironmentFile=-/srv/dgteam/.env
+LogsDirectory=dgteam
+ExecStart=/srv/dgteam/.venv/bin/python -m dgteam.query_api.app --host 127.0.0.1 --port 9765
+Restart=always
+RestartSec=3
+TimeoutStopSec=15
+StandardOutput=append:/var/log/dgteam/query-api.log
+StandardError=append:/var/log/dgteam/query-api.err.log
+
+[Install]
+WantedBy=multi-user.target
+Alias=dgteam-query-api.service

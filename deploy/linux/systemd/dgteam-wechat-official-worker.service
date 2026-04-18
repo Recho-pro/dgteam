@@ -1,0 +1,18 @@
+[Unit]
+Description=DGTEAM WeChat Official Image Worker
+After=network.target dgteam-wechat-official.service
+
+[Service]
+Type=simple
+WorkingDirectory=/srv/dgteam
+EnvironmentFile=-/srv/dgteam/.env
+LogsDirectory=dgteam
+ExecStart=/srv/dgteam/.venv/bin/python -m dgteam.integrations.wechat_official.worker_cli
+Restart=always
+RestartSec=3
+TimeoutStopSec=15
+StandardOutput=append:/var/log/dgteam/wechat-official-worker.log
+StandardError=append:/var/log/dgteam/wechat-official-worker.err.log
+
+[Install]
+WantedBy=multi-user.target

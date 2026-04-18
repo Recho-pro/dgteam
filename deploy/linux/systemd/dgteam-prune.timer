@@ -1,0 +1,9 @@
+[Unit]
+Description=Run DGTEAM prune after the daily backup window
+
+[Timer]
+OnCalendar=*-*-* 04:15:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

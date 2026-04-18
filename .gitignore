@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+*.db
+*.db-shm
+*.db-wal
+*.log
+runtime/
+dist/
+build/
+.pytest_cache/
+dgteam_code_sync_*.zip
+dgteam_code_backup_*.tar.gz
+config/automation/prod/auth.json
+config/automation/prod/profile.env
+config/automation/prod/sync.env

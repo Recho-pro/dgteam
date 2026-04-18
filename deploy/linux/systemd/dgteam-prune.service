@@ -1,0 +1,12 @@
+[Unit]
+Description=DGTEAM Runtime Prune
+After=network.target dgteam-backup.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/srv/dgteam
+EnvironmentFile=-/srv/dgteam/.env
+LogsDirectory=dgteam
+ExecStart=/srv/dgteam/deploy/linux/bin/dgteam-prune.sh
+StandardOutput=append:/var/log/dgteam/prune.log
+StandardError=append:/var/log/dgteam/prune.err.log

@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dgteam"
+version = "0.1.0"
+description = "DGTEAM market data agent and SaaS platform"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+  { name = "DG Team" }
+]
+dependencies = [
+  "pydantic>=2.8,<3",
+  "python-dotenv>=1.0,<2",
+  "fastapi>=0.116,<1",
+  "uvicorn>=0.35,<1",
+  "numpy>=2.2,<3",
+  "pillow>=11.1,<12",
+  "playwright>=1.52,<2",
+  "pycryptodome>=3.23,<4",
+  "requests>=2.32,<3",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3,<9",
+  "pre-commit>=4.3,<5",
+]
+
+[project.scripts]
+dgteam-dev = "dgteam.dev_cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

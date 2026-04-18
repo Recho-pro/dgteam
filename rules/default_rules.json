@@ -1,0 +1,359 @@
+{
+  "crawler": {
+    "history_days": 3,
+    "per_group_valid_limit": 10,
+    "fixed_city": "全国",
+    "gprice_pattern": "(\\d{2}-\\d{2})",
+    "out_of_stock_keywords": [
+      "无货"
+    ],
+    "global_exclude_dstatus_keywords": [
+      "预激活",
+      "AC+",
+      "激活",
+      "提供激活照片",
+      "当天激活发出",
+      "当面激活",
+      "现货当面激活",
+      "特定区域销售",
+      "区域销售",
+      "省内",
+      "禁止出省",
+      "禁出线上",
+      "本地",
+      "同城"
+    ],
+    "apple": {
+      "brand_keywords": [
+        "苹果",
+        "apple"
+      ],
+      "allow_dstatus_keywords": [
+        "公司纯原封",
+        "全国纯原"
+      ],
+      "exclude_dstatus_keywords": [
+        "预激活",
+        "AC+",
+        "激活",
+        "拆封",
+        "包装瑕疵",
+        "演示",
+        "官换",
+        "资源机",
+        "监管机",
+        "机器瑕疵",
+        "提供激活照片",
+        "当天激活发出",
+        "当面激活",
+        "现货当面激活",
+        "盒损",
+        "瑕疵"
+      ]
+    },
+    "non_apple": {
+      "exclude_dstatus_keywords": [
+        "时价",
+        "激活",
+        "预激活",
+        "AC+",
+        "拆封",
+        "开封",
+        "提供激活照片",
+        "当天激活发出",
+        "当面激活",
+        "现货当面激活",
+        "演示",
+        "官换",
+        "资源机"
+      ]
+    }
+  },
+  "cleaning": {
+    "apple_brand": "苹果",
+    "apple_target_dstatus_substring": "公司纯原封",
+    "apple_target_dstatus_keywords": [
+      "公司纯原封",
+      "全国纯原"
+    ],
+    "positive_keywords": [
+      {
+        "tag": "factory_sealed",
+        "keyword": "原封"
+      },
+      {
+        "tag": "pure_original",
+        "keyword": "纯原"
+      }
+    ],
+    "negative_keywords": [
+      {
+        "tag": "preactivated",
+        "keyword": "预激活"
+      },
+      {
+        "tag": "ac_plus",
+        "keyword": "AC+"
+      },
+      {
+        "tag": "activate_on_ship",
+        "keyword": "当天激活发出"
+      },
+      {
+        "tag": "activate_face_to_face",
+        "keyword": "现货当面激活"
+      },
+      {
+        "tag": "activation_photo",
+        "keyword": "提供激活照片"
+      },
+      {
+        "tag": "opened_not_activated",
+        "keyword": "拆封未激活"
+      },
+      {
+        "tag": "opened",
+        "keyword": "拆封"
+      },
+      {
+        "tag": "activated",
+        "keyword": "激活"
+      },
+      {
+        "tag": "official_replacement",
+        "keyword": "官换"
+      },
+      {
+        "tag": "refurbished",
+        "keyword": "资源机"
+      },
+      {
+        "tag": "demo",
+        "keyword": "演示"
+      },
+      {
+        "tag": "box_damage",
+        "keyword": "包装瑕疵"
+      },
+      {
+        "tag": "outer_box_opened",
+        "keyword": "牛皮外箱无或开封"
+      },
+      {
+        "tag": "box_opened",
+        "keyword": "开封"
+      },
+      {
+        "tag": "machine_flaw",
+        "keyword": "机器瑕疵"
+      },
+      {
+        "tag": "region_restricted",
+        "keyword": "特定区域销售"
+      },
+      {
+        "tag": "region_restricted",
+        "keyword": "区域销售"
+      },
+      {
+        "tag": "province_restricted",
+        "keyword": "省内"
+      },
+      {
+        "tag": "province_restricted",
+        "keyword": "禁止出省"
+      },
+      {
+        "tag": "online_restricted",
+        "keyword": "禁出线上"
+      },
+      {
+        "tag": "local_restricted",
+        "keyword": "本地"
+      },
+      {
+        "tag": "city_restricted",
+        "keyword": "同城"
+      }
+    ],
+    "hard_exclude_negative_tags": [
+      "preactivated",
+      "ac_plus",
+      "activate_on_ship",
+      "activate_face_to_face",
+      "activation_photo",
+      "opened_not_activated",
+      "activated",
+      "activation_date_present",
+      "region_restricted",
+      "province_restricted",
+      "online_restricted",
+      "local_restricted",
+      "city_restricted"
+    ],
+    "sale_keywords": [
+      {
+        "tag": "drop_ship",
+        "keyword": "代发"
+      },
+      {
+        "tag": "good_price",
+        "keyword": "好价"
+      },
+      {
+        "tag": "ship_nationwide",
+        "keyword": "可出全国"
+      },
+      {
+        "tag": "region_only",
+        "keyword": "特定区域销售"
+      },
+      {
+        "tag": "province_only",
+        "keyword": "禁止出省"
+      },
+      {
+        "tag": "online_restricted",
+        "keyword": "禁出线上"
+      },
+      {
+        "tag": "serial_safe",
+        "keyword": "不怕串"
+      },
+      {
+        "tag": "serial_sensitive",
+        "keyword": "怕查"
+      },
+      {
+        "tag": "subsidy_serial",
+        "keyword": "串号可过国补"
+      },
+      {
+        "tag": "spot_goods",
+        "keyword": "现货"
+      },
+      {
+        "tag": "default_quote",
+        "keyword": "默认"
+      },
+      {
+        "tag": "timed_quote",
+        "keyword": "时价"
+      }
+    ]
+  },
+  "quality_engine": {
+    "day_selection": {
+      "min_samples": 1,
+      "max_labels": 1
+    },
+    "status_filter": {
+      "exclude_noise_keywords": [
+        "时价",
+        "国补",
+        "补贴",
+        "店补",
+        "平台补贴",
+        "以旧换新"
+      ]
+    },
+    "retention": {
+      "sparse_min_keep": 4,
+      "sparse_max_trim": 1,
+      "balanced_min_keep": 4,
+      "balanced_keep_ratio": 0.65,
+      "dense_min_keep": 5,
+      "dense_keep_ratio": 0.45
+    },
+    "outlier_profiles": {
+      "balanced": {
+        "modified_zscore": {
+          "enabled": true,
+          "threshold": 4.0,
+          "min_gap_floor": 140,
+          "min_gap_ratio": 0.02
+        },
+        "iqr": {
+          "enabled": true,
+          "fence_multiplier": 2.4,
+          "min_gap_floor": 140,
+          "min_gap_ratio": 0.02
+        },
+        "cluster_tail": {
+          "enabled": false
+        }
+      },
+      "dense": {
+        "modified_zscore": {
+          "enabled": true,
+          "threshold": 3.5,
+          "min_gap_floor": 120,
+          "min_gap_ratio": 0.018
+        },
+        "iqr": {
+          "enabled": true,
+          "fence_multiplier": 2.0,
+          "min_gap_floor": 120,
+          "min_gap_ratio": 0.018
+        },
+        "cluster_tail": {
+          "enabled": true
+        }
+      }
+    },
+    "interval_generation": {
+      "single_quote_mode": "exact",
+      "single_quote_padding_floor": 0,
+      "single_quote_padding_ratio": 0.0,
+      "sparse_minmax_max_count": 3,
+      "iqr_min_sample_count": 4
+    },
+    "scoring": {
+      "count_weight": 14.0,
+      "spread_penalty_divisor": 18.0,
+      "reference_penalty_divisor": 45.0,
+      "reference_penalty_cap": 2000,
+      "single_sample_penalty": 14.0,
+      "two_sample_penalty": 6.0,
+      "status_priority": {
+        "apple_exact": 36,
+        "apple_nationwide": 30,
+        "apple_contains_company_pure_sealed": 22,
+        "apple_other": 0,
+        "default_with_status": 10,
+        "default_without_status": 6
+      }
+    }
+  },
+  "reporting": {
+    "task_status_groups": {
+      "terminal_success": [
+        "ok",
+        "zero_row"
+      ],
+      "terminal_failure": [
+        "error",
+        "exception",
+        "persistence_error"
+      ],
+      "skipped": [
+        "skipped_done",
+        "skipped_blacklist"
+      ]
+    },
+    "row_drop_reasons": [
+      "drop_by_date",
+      "drop_out_of_stock",
+      "drop_by_activation_field",
+      "drop_by_global_dstatus",
+      "drop_by_apple_dstatus",
+      "drop_by_non_apple_dstatus",
+      "drop_invalid_price"
+    ],
+    "gap_event_types": [
+      "gap_detected",
+      "gap_unresolved",
+      "gap_resolved"
+    ]
+  }
+}

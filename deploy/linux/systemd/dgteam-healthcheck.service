@@ -1,0 +1,12 @@
+[Unit]
+Description=DGTEAM Healthcheck
+After=network.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/srv/dgteam
+EnvironmentFile=-/srv/dgteam/.env
+LogsDirectory=dgteam
+ExecStart=/srv/dgteam/deploy/linux/bin/dgteam-healthcheck.sh
+StandardOutput=append:/var/log/dgteam/healthcheck.log
+StandardError=append:/var/log/dgteam/healthcheck.err.log

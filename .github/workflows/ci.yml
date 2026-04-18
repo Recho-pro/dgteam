@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - "codex/**"
+  pull_request:
+
+jobs:
+  python-quality:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install editable package with dev extras
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[dev]'
+
+      - name: Install Playwright chromium
+        run: python -m dgteam.dev_cli install-ui-browser
+
+      - name: Compile source tree
+        run: python -m compileall src
+
+      - name: Run encoding guard
+        run: python scripts/check_encoding.py
+
+      - name: Run pytest suite
+        run: python -m pytest -q
+
+      - name: Run query_ui browser baseline explicitly
+        run: python -m dgteam.dev_cli test-ui

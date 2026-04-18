@@ -1,0 +1,18 @@
+[Unit]
+Description=DGTEAM WeCom Clawbot Bridge
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/srv/dgteam
+EnvironmentFile=-/srv/dgteam/.env
+LogsDirectory=dgteam
+ExecStart=/srv/dgteam/.venv/bin/python -m dgteam.integrations.wechat_clawbot.app --host 127.0.0.1 --port 8965
+Restart=always
+RestartSec=3
+TimeoutStopSec=15
+StandardOutput=append:/var/log/dgteam/wechat-clawbot.log
+StandardError=append:/var/log/dgteam/wechat-clawbot.err.log
+
+[Install]
+WantedBy=multi-user.target

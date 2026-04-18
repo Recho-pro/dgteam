@@ -1,0 +1,7 @@
+{
+  "auth": {
+    "username": "",
+    "password": "",
+    "max_login_retries": 3
+  }
+}

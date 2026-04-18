@@ -1,0 +1,22 @@
+[Unit]
+Description=DGTEAM GitHub Trusted Runner
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/srv/dgteam/runtime/cloud/github_runner/run.sh
+ConditionPathExists=/srv/dgteam/runtime/cloud/github_runner/.runner
+
+[Service]
+Type=simple
+WorkingDirectory=/srv/dgteam/runtime/cloud/github_runner
+EnvironmentFile=-/srv/dgteam/.runner.env
+Environment=RUNNER_ALLOW_RUNASROOT=1
+LogsDirectory=dgteam
+ExecStart=/srv/dgteam/runtime/cloud/github_runner/run.sh
+Restart=always
+RestartSec=5
+TimeoutStopSec=30
+StandardOutput=append:/var/log/dgteam/github-runner.log
+StandardError=append:/var/log/dgteam/github-runner.err.log
+
+[Install]
+WantedBy=multi-user.target

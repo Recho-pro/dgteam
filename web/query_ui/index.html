@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <meta content="__DGTEAM_ASSET_VERSION__" name="asset-version">
+  <title>DG团队实时行情查询</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23151515'/%3E%3Ctext x='32' y='39' text-anchor='middle' font-family='Arial,sans-serif' font-size='24' font-weight='700' fill='%23ffffff'%3EDG%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="__DGTEAM_STYLES_HREF__">
+</head>
+<body>
+  <div class="page-glow page-glow-left"></div>
+  <div class="page-glow page-glow-right"></div>
+
+  <nav class="top-nav">
+    <div class="nav-inner">
+      <div class="brand-block">
+        <div class="brand-mark">DG团队</div>
+        <div class="brand-copy">实时行情查询</div>
+      </div>
+      <div class="nav-actions">
+        <span class="nav-live">最近同步 <strong id="liveTimestamp">--</strong></span>
+        <button class="nav-cta" id="refreshBtn" type="button">同步最新</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main-shell">
+    <section class="hero-stage">
+      <div class="hero-copy">
+        <h1>全品类行情查询</h1>
+      </div>
+
+      <div class="hero-search-shell" id="searchShell">
+        <label class="sr-only" for="searchInput">搜索型号</label>
+        <div class="hero-search" id="searchBar">
+          <span aria-hidden="true" class="search-icon">&#9906;</span>
+          <input
+            id="searchInput"
+            type="text"
+            placeholder="输入型号关键词，例如 iPhone 17 Pro Max / Mate 80 / K80"
+            autocomplete="off"
+            spellcheck="false"
+            inputmode="search"
+            enterkeyhint="search"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-controls="suggestionList"
+            aria-expanded="false"
+            aria-activedescendant=""
+            aria-describedby="searchStatus"
+          >
+          <button id="queryBtn" type="button">立即查询</button>
+        </div>
+        <div class="suggestion-dropdown" id="suggestionList" role="listbox" aria-label="型号候选"></div>
+        <div class="search-status" id="searchStatus" role="status" aria-live="polite">输入型号后会自动匹配最接近的结果。</div>
+      </div>
+    </section>
+
+    <section class="result-stage">
+      <article class="glass-card result-card" id="resultCard" aria-live="polite" aria-busy="false">
+        <div class="result-overview" id="resultOverview" hidden>
+          <div class="result-overview-copy">
+            <div class="result-kicker">结果概览</div>
+            <h2 class="result-title" id="resultTitle">等待搜索</h2>
+            <p class="result-subtitle" id="resultSubtitle">输入型号后查看各容量和配色区间。</p>
+          </div>
+          <div class="result-badge" id="resultBadge">--</div>
+        </div>
+        <div class="result-feedback" id="resultFeedback" hidden></div>
+        <div class="result-empty" id="resultEmpty">输入型号后查看结果</div>
+        <div class="result-recovery" id="resultRecovery" hidden>
+          <div class="recovery-copy" id="recoveryCopy"></div>
+          <div class="recovery-actions" id="recoveryActions"></div>
+        </div>
+
+        <section class="variant-section" id="variantSection" hidden>
+          <div class="variant-panels" id="variantPanels" aria-label="结果"></div>
+        </section>
+      </article>
+    </section>
+  </main>
+
+  <script src="__DGTEAM_APP_HREF__"></script>
+</body>
+</html>

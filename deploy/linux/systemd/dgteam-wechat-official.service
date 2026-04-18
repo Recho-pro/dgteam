@@ -1,0 +1,18 @@
+[Unit]
+Description=DGTEAM WeChat Official Account Bridge
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/srv/dgteam
+EnvironmentFile=-/srv/dgteam/.env
+LogsDirectory=dgteam
+ExecStart=/srv/dgteam/.venv/bin/python -m dgteam.integrations.wechat_official.app --host 127.0.0.1 --port 8975
+Restart=always
+RestartSec=3
+TimeoutStopSec=15
+StandardOutput=append:/var/log/dgteam/wechat-official.log
+StandardError=append:/var/log/dgteam/wechat-official.err.log
+
+[Install]
+WantedBy=multi-user.target

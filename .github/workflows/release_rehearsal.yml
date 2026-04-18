@@ -1,0 +1,105 @@
+name: Release Rehearsal
+
+on:
+  schedule:
+    - cron: "30 18 * * *"
+  workflow_dispatch:
+    inputs:
+      gate:
+        description: "Which candidate release gate to run."
+        required: false
+        default: "fixture"
+        type: choice
+        options:
+          - fixture
+          - real-source
+          - both
+      source_db:
+        description: "Optional absolute source DB path override for the trusted real-source gate."
+        required: false
+        default: "/srv/dgteam/runtime/cloud/current/dgteam.db"
+
+jobs:
+  fixture-candidate-gate:
+    if: github.event_name == 'schedule' || github.event.inputs.gate == 'fixture' || github.event.inputs.gate == 'both' || github.event.inputs.gate == ''
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install editable package with dev extras
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[dev]'
+
+      - name: Preflight fixture release gate contract
+        run: |
+          python scripts/trusted_runner_preflight.py --mode fixture --project-root . --workflow-path .github/workflows/release_rehearsal.yml --assert-gate-ready > fixture-preflight.json
+
+      - name: Run fixture candidate release gate
+        run: python -m dgteam.dev_cli candidate-gate-fixture
+
+      - name: Upload fixture rehearsal artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-rehearsal-fixture
+          path: |
+            fixture-preflight.json
+            runtime/local/integration_smoke/**/smoke_report.json
+            runtime/local/integration_smoke/**/gate_result.json
+            runtime/local/integration_smoke/**/cloud/deployments/**
+            runtime/local/integration_smoke/**/cloud/releases/rolled_back_*
+
+  real-source-candidate-gate:
+    if: github.event_name == 'workflow_dispatch' && (github.event.inputs.gate == 'real-source' || github.event.inputs.gate == 'both')
+    runs-on:
+      - self-hosted
+      - dgteam-trusted
+    env:
+      DGTEAM_SMOKE_SOURCE_DB: ${{ github.event.inputs.source_db }}
+      DGTEAM_GITHUB_RUNNER_ENV_FILE: /srv/dgteam/.runner.env
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install editable package with dev extras
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[dev]'
+
+      - name: Preflight trusted runner release gate contract
+        run: |
+          python scripts/trusted_runner_preflight.py --mode real-source --project-root . --workflow-path .github/workflows/release_rehearsal.yml --runner-env-file "${DGTEAM_GITHUB_RUNNER_ENV_FILE}" --source-db "${DGTEAM_SMOKE_SOURCE_DB}" --assert-gate-ready > trusted-runner-preflight.json
+
+      - name: Dry-run trusted runner registration contract
+        run: |
+          python scripts/trusted_runner_register.py --project-root . --workflow-path .github/workflows/release_rehearsal.yml --runner-env-file "${DGTEAM_GITHUB_RUNNER_ENV_FILE}" --source-db "${DGTEAM_SMOKE_SOURCE_DB}" --dry-run > trusted-runner-registration.json
+
+      - name: Run real-source candidate release gate
+        run: python -m dgteam.dev_cli candidate-gate-real-source
+
+      - name: Upload real-source rehearsal artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-rehearsal-real-source
+          path: |
+            trusted-runner-preflight.json
+            trusted-runner-registration.json
+            runtime/local/integration_smoke/**/smoke_report.json
+            runtime/local/integration_smoke/**/gate_result.json
+            runtime/local/integration_smoke/**/cloud/deployments/**
+            runtime/local/integration_smoke/**/cloud/releases/rolled_back_*

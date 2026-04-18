@@ -1,0 +1,19 @@
+[Unit]
+Description=DGTEAM Publish API
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/srv/dgteam
+EnvironmentFile=-/srv/dgteam/.env
+LogsDirectory=dgteam
+ExecStart=/srv/dgteam/.venv/bin/python -m dgteam.publish_api.app --host 127.0.0.1 --port 9865
+Restart=always
+RestartSec=3
+TimeoutStopSec=15
+StandardOutput=append:/var/log/dgteam/publish-api.log
+StandardError=append:/var/log/dgteam/publish-api.err.log
+
+[Install]
+WantedBy=multi-user.target
+Alias=dgteam-publish-api.service
