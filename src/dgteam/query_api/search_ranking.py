@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from typing import Any, Callable, Dict, Iterable, List, Sequence, Set, Tuple
 
+PRIMARY_DEVICE_SERIES_HINTS: Set[str] = {"iphone", "mate", "pura", "nova", "magic", "note"}
+ACCESSORY_LIKE_CATEGORIES: Set[str] = {"charger", "case", "accessory"}
+
 
 def contains_any_keyword(text: str, keywords: Iterable[str]) -> bool:
     return any(keyword in text for keyword in keywords)
@@ -36,6 +39,16 @@ def candidate_matches_category_intents(
         or ("accessory" in intents and contains_any_keyword(text, accessory_keywords))
     )
     return soft_match, False
+
+
+def query_prefers_primary_device_results(context: Any) -> bool:
+    category_intents = set(getattr(context, "category_intents", set()) or set())
+    if category_intents:
+        return False
+    if getattr(context, "bare_model_query", False):
+        return True
+    series_hints = set(getattr(context, "series_hints", set()) or set())
+    return bool(series_hints & PRIMARY_DEVICE_SERIES_HINTS)
 
 
 def candidate_bucket_priority(candidate: Dict[str, Any]) -> int:
@@ -295,6 +308,14 @@ def score_candidate(
             best_score -= 420
         elif category_kind in {"earbuds", "tablet", "wearable", "laptop"}:
             best_score -= 180
+
+    if query_prefers_primary_device_results(context):
+        if category_kind == "phone":
+            best_score += 260
+        elif category_kind in ACCESSORY_LIKE_CATEGORIES:
+            return -1
+        elif category_kind in {"earbuds", "tablet", "wearable", "laptop"}:
+            best_score -= 540
 
     variant_texts = [str(value or "") for value in candidate.get("variant_texts_normalized") or []]
     capacity_hints = set(getattr(context, "capacity_hints", set()) or set())

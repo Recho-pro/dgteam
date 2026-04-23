@@ -836,12 +836,43 @@ body {
 }
 
 @media (max-width: 560px) {
+  .nav-inner {
+    padding: 8px 2px 10px;
+    gap: 10px;
+  }
+
+  .nav-actions {
+    width: 100%;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
   .brand-mark {
     font-size: 22px;
   }
 
+  .hero-stage {
+    gap: 14px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
   .hero-copy h1 {
-    font-size: clamp(28px, 10vw, 38px);
+    font-size: clamp(28px, 9vw, 36px);
+  }
+
+  .hero-search {
+    grid-template-columns: auto 1fr auto;
+    padding: 8px 8px 8px 10px;
+    gap: 8px;
+  }
+
+  .hero-search button {
+    grid-column: auto;
+    width: auto;
+    min-width: 92px;
+    padding: 11px 14px;
+    font-size: 13px;
   }
 
   .capacity-price {
@@ -861,11 +892,13 @@ body {
 
 @media (max-width: 480px) {
   .hero-search {
-    grid-template-columns: auto 1fr;
+    grid-template-columns: auto 1fr auto;
   }
 
   .hero-search button {
-    width: 100%;
+    width: auto;
+    min-width: 86px;
+    padding: 10px 12px;
   }
 
   .search-icon {

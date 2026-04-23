@@ -99,6 +99,15 @@ def build_fixture_candidates() -> list[dict[str, object]]:
         make_raw_candidate(
             brand_title="苹果",
             series_title="Apple 配件",
+            model_title="Apple原装保护壳",
+            group_title="iPhone 17 透明壳",
+            row_count=16,
+            source_count=7,
+            condition_bucket="apple_company_pure_sealed_target",
+        ),
+        make_raw_candidate(
+            brand_title="苹果",
+            series_title="Apple 配件",
             model_title="Apple Pencil (手写笔)",
             group_title="白色",
             row_count=11,
@@ -160,6 +169,11 @@ def top_label(app: QueryApp, query: str) -> str:
     return str(results[0].get("label") or "") if results else ""
 
 
+def labels(app: QueryApp, query: str, *, limit: int = 6) -> list[str]:
+    payload = app.search_payload(query, limit=limit)
+    return [str(item.get("label") or "") for item in payload.get("results") or []]
+
+
 def test_search_accepts_spaced_pinyin_for_apple(tmp_path: Path):
     app = build_fixture_app(tmp_path)
     assert top_label(app, "ping guo 17 pm") == "iPhone 17 Pro Max"
@@ -173,6 +187,13 @@ def test_search_accepts_spaced_pinyin_for_redmi(tmp_path: Path):
 def test_search_prefers_exact_family_when_capacity_noise_is_present(tmp_path: Path):
     app = build_fixture_app(tmp_path)
     assert top_label(app, "苹果17 256") == "iPhone 17"
+
+
+def test_search_demotes_accessory_results_for_primary_phone_model_queries(tmp_path: Path):
+    app = build_fixture_app(tmp_path)
+    ranked = labels(app, "苹果17", limit=6)
+    assert ranked[:3] == ["iPhone 17", "iPhone 17 Pro Max", "iPhone 17 Pro"]
+    assert "Apple原装保护壳" not in ranked
 
 
 def test_search_routes_apple_wattage_query_to_accessory_family(tmp_path: Path):

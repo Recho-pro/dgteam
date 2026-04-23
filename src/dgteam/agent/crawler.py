@@ -60,6 +60,13 @@ DEFAULT_PROCESS_WORKERS = max(1, min(4, os.cpu_count() or 1))
 DEFAULT_SYSTEM_ROOT = _project_env("DGTEAM_SYSTEM_ROOT", str(PROJECT_ROOT))
 DEFAULT_RULES_PATH = str(Path(DEFAULT_SYSTEM_ROOT) / "rules" / "default_rules.json")
 DEFAULT_SQLITE_DB_PATH = str(Path(DEFAULT_SYSTEM_ROOT) / "runtime" / "local" / "data" / "dgteam.db")
+DEFAULT_BROWSER_EXECUTABLE = _project_env("DGTEAM_BROWSER_EXECUTABLE", "")
+WINDOWS_BROWSER_CANDIDATES = (
+    Path(r"C:\Program Files\Google\Chrome\Application\chrome.exe"),
+    Path(r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"),
+    Path(r"C:\Program Files\Microsoft\Edge\Application\msedge.exe"),
+    Path(r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"),
+)
 TASK_META_FIELDS = (
     "brand_id",
     "brand_title",
@@ -104,6 +111,19 @@ def configure_stdio():
 
 
 configure_stdio()
+
+
+def resolve_browser_executable() -> str:
+    configured = str(DEFAULT_BROWSER_EXECUTABLE or "").strip()
+    if configured:
+        candidate = Path(configured).expanduser()
+        if candidate.exists():
+            return str(candidate.resolve())
+    if os.name == "nt":
+        for candidate in WINDOWS_BROWSER_CANDIDATES:
+            if candidate.exists():
+                return str(candidate.resolve())
+    return ""
 
 APPLE_ALLOWED_DSTATUS_KEYWORD = "\u516c\u53f8\u7eaf\u539f\u5c01"
 APPLE_EXCLUDED_DSTATUS_KEYWORDS = (
@@ -2107,12 +2127,17 @@ def main():
     ]
 
     with sync_playwright() as p:
-        context = p.chromium.launch_persistent_context(
-            user_data_dir=str(Path(args.profile_dir).resolve()),
-            headless=args.headless,
-            ignore_https_errors=True,
-            viewport={"width": 1440, "height": 900},
-        )
+        launch_kwargs = {
+            "user_data_dir": str(Path(args.profile_dir).resolve()),
+            "headless": args.headless,
+            "ignore_https_errors": True,
+            "viewport": {"width": 1440, "height": 900},
+        }
+        browser_executable = resolve_browser_executable()
+        if browser_executable:
+            launch_kwargs["executable_path"] = browser_executable
+            log("Using browser executable override:", browser_executable)
+        context = p.chromium.launch_persistent_context(**launch_kwargs)
         page = context.pages[0] if context.pages else context.new_page()
 
         log("Opening website:", BASE)

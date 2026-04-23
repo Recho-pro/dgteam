@@ -86,10 +86,18 @@ def format_no_result(query: str) -> str:
 def format_ambiguous_result(query: str, results: list[dict[str, Any]]) -> str:
     lines = [f"“{_clean(query)}”我先帮你缩到这几项："]
     for index, item in enumerate(results[:6], start=1):
-        label = _clean(item.get("label") or item.get("family_title") or item.get("model_title")) or "未命名机型"
+        label = _ambiguous_choice_label(item)
         lines.append(f"{index}. {label}")
-    lines.append("直接回数字继续就行，比如回 1。")
+    lines.append("直接回数字继续就行，比如回 1；也可以直接补一句关键信息继续缩小，比如“pro max”“512G”“不要蜂窝”。")
     return "\n".join(lines)
+
+
+def format_candidate_followup_hint(*, query: str, candidate_count: int) -> str:
+    return _join_lines(
+        f"你现在还在上一组 {int(candidate_count or 0)} 个候选里，先回数字会最快，比如回 1。",
+        f"你刚补的是“{_clean(query)}”，这类容量/颜色/版本词，最好先锁定具体机型后再补。",
+        "如果你不想回数字，也可以直接补能区分候选的词继续缩小，比如“pro max”“不要蜂窝”“16G+1T”。",
+    )
 
 
 def format_image_query_placeholder(task_id: str = "") -> str:
@@ -331,6 +339,14 @@ def _humanize_image_reason(reason: str) -> str:
     if "not enough" in lowered or "too blurry" in lowered or "unclear" in lowered:
         return "这张图里的标题或规格不够清楚，我没法稳妥地给你对行情。"
     return clean_reason
+
+
+def _ambiguous_choice_label(item: dict[str, Any]) -> str:
+    label = _clean(item.get("label") or item.get("family_title") or item.get("model_title")) or "未命名机型"
+    meta = _clean(item.get("meta"))
+    if meta and meta.casefold() != label.casefold():
+        return f"{label}（{meta}）"
+    return label
 
 
 def _snapshot_follow_up_hint(snapshot: dict[str, Any]) -> str:

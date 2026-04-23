@@ -3,10 +3,13 @@ from __future__ import annotations
 import logging
 import re
 import time
+import unicodedata
 from pathlib import Path
 from typing import Iterable
 
 from dgteam.integrations.wechat_official.formatter import (
+    format_ambiguous_result,
+    format_candidate_followup_hint,
     format_contact_message,
     format_greeting_message,
     format_help_message,
@@ -151,6 +154,13 @@ class WechatOfficialWorkflow:
         if numeric_choice is not None:
             return self._handle_numeric_choice(open_id=open_id, choice=numeric_choice)
 
+        pending_followup = self._handle_pending_candidate_followup(session=session, query=query)
+        if pending_followup is not None:
+            reply_text, should_save = pending_followup
+            if should_save:
+                self.session_store.save(session)
+            return reply_text
+
         is_refinement = self._looks_like_refinement(query)
         effective_query = self._build_contextual_query(session, query)
         if is_refinement and session.last_candidate:
@@ -283,6 +293,151 @@ class WechatOfficialWorkflow:
         )
         self.session_store.save(session)
         return plan.reply_text
+
+    def _handle_pending_candidate_followup(
+        self,
+        *,
+        session,
+        query: str,
+    ) -> tuple[str, bool] | None:
+        session_state = classify_session(session)
+        if session_state.phase != "awaiting_candidate_selection":
+            return None
+
+        pending_candidates = [dict(item or {}) for item in list(session.pending_candidates or [])]
+        if not pending_candidates:
+            return None
+
+        narrowed_candidates = self._narrow_pending_candidates(pending_candidates, query)
+        if len(narrowed_candidates) == 1:
+            candidate = narrowed_candidates[0]
+            plan = self.response_layer.resolve_candidate(candidate)
+            if plan.kind != "snapshot":
+                return None
+            apply_snapshot_plan(
+                session,
+                effective_query=str(
+                    candidate.get("label") or candidate.get("family_title") or candidate.get("model_title") or query
+                ),
+                plan=plan,
+                fallback_candidate=candidate,
+            )
+            return plan.reply_text, True
+
+        if 1 < len(narrowed_candidates) < len(pending_candidates):
+            effective_query = self._build_contextual_query(session, query)
+            session.source_query = effective_query
+            session.last_query = effective_query
+            session.last_result_title = ""
+            session.last_candidate = {}
+            session.pending_candidates = [dict(item or {}) for item in narrowed_candidates[:6]]
+            return format_ambiguous_result(query, narrowed_candidates), True
+
+        if not narrowed_candidates and self._looks_like_refinement(query):
+            return (
+                format_candidate_followup_hint(
+                    query=query,
+                    candidate_count=len(pending_candidates),
+                ),
+                False,
+            )
+        return None
+
+    @classmethod
+    def _narrow_pending_candidates(
+        cls,
+        pending_candidates: list[dict[str, object]],
+        query: str,
+    ) -> list[dict[str, object]]:
+        scored: list[tuple[int, int, dict[str, object]]] = []
+        for index, candidate in enumerate(pending_candidates):
+            score = cls._pending_candidate_score(candidate, query)
+            if score <= 0:
+                continue
+            scored.append((score, -index, dict(candidate or {})))
+
+        if not scored:
+            return []
+
+        scored.sort(key=lambda item: (item[0], item[1]), reverse=True)
+        top_score = scored[0][0]
+        cutoff = max(60, top_score - 40)
+        return [candidate for score, _index, candidate in scored if score >= cutoff][:6]
+
+    @classmethod
+    def _pending_candidate_score(cls, candidate: dict[str, object], query: str) -> int:
+        normalized_query = cls._normalize_followup_surface(query)
+        if not normalized_query:
+            return 0
+
+        surface = cls._candidate_followup_surface(candidate)
+        if not surface:
+            return 0
+
+        score = 0
+        if normalized_query == surface:
+            score += 260
+        elif normalized_query in surface or surface in normalized_query:
+            score += 180
+
+        query_tokens = cls._candidate_followup_tokens(query)
+        for token in query_tokens:
+            if token and token in surface:
+                score += 70
+
+        if cls._contains_any(query, ("不要蜂窝", "不带蜂窝", "非蜂窝", "无蜂窝", "wifi版")):
+            if cls._contains_any(surface, ("蜂窝", "cellular", "esim")):
+                score -= 220
+            else:
+                score += 140
+
+        if cls._contains_any(query, ("gps", "运动")) and cls._contains_any(surface, ("gps", "运动")):
+            score += 80
+
+        if cls._contains_any(query, ("pro max", "promax")) and cls._contains_any(surface, ("promax",)):
+            score += 120
+
+        if cls._contains_any(query, ("pro",)) and cls._contains_any(surface, ("pro",)):
+            score += 40
+
+        if cls._contains_any(query, ("max",)) and cls._contains_any(surface, ("max",)):
+            score += 40
+
+        return score
+
+    @classmethod
+    def _candidate_followup_surface(cls, candidate: dict[str, object]) -> str:
+        return cls._normalize_followup_surface(
+            " ".join(
+                str(part or "")
+                for part in (
+                    candidate.get("label"),
+                    candidate.get("family_title"),
+                    candidate.get("model_title"),
+                    candidate.get("series_title"),
+                    candidate.get("brand_title"),
+                    candidate.get("meta"),
+                )
+                if str(part or "").strip()
+            )
+        )
+
+    @classmethod
+    def _candidate_followup_tokens(cls, text: str) -> list[str]:
+        normalized = cls._normalize_followup_surface(text)
+        if not normalized:
+            return []
+        return [token for token in re.findall(r"[a-z0-9]+|[\u4e00-\u9fff]+", normalized) if token]
+
+    @staticmethod
+    def _normalize_followup_surface(text: str) -> str:
+        normalized = unicodedata.normalize("NFKC", str(text or "").strip()).lower()
+        return "".join(ch for ch in normalized if ch.isalnum() or "\u4e00" <= ch <= "\u9fff")
+
+    @classmethod
+    def _contains_any(cls, text: str, hints: Iterable[str]) -> bool:
+        normalized = cls._normalize_followup_surface(text)
+        return any(cls._normalize_followup_surface(hint) in normalized for hint in hints if hint)
 
     @staticmethod
     def _parse_numeric_choice(text: str) -> int | None:

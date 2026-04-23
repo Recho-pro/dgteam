@@ -8,6 +8,8 @@ import pytest
 
 from dgteam.core.config import WechatOfficialConfig
 from dgteam.integrations.wechat_official.formatter import (
+    format_ambiguous_result,
+    format_candidate_followup_hint,
     format_image_query_deferred,
     format_image_unsupported,
     format_market_snapshot,
@@ -381,7 +383,7 @@ class FakeQueryService:
                 _candidate("MagicBook Art 14 2025款", brand_title="荣耀", series_title="MagicBook"),
                 _candidate("MagicBook Pro 16 2024款", brand_title="荣耀", series_title="MagicBook"),
             ]
-        elif normalized in {"series11gps", "applewatchs11深空灰色gps"}:
+        elif normalized == "series11gps" or normalized.startswith("applewatchs11"):
             results = [
                 _candidate("Series 11 GPS+蜂窝", brand_title="苹果", series_title="Apple Watch"),
                 _candidate("Series 11 GPS", brand_title="苹果", series_title="Apple Watch"),
@@ -695,6 +697,81 @@ def test_workflow_supports_ambiguous_choice_and_short_context_refinement(tmp_pat
     fourth = workflow.handle_text_message(make_text_message("512"))
     assert "你刚刚补的是：512" in fourth or "你刚刚补的是：512G" in fourth
     assert "11395-11420" in fourth
+
+
+def test_ambiguous_result_includes_meta_and_textual_followup_hint():
+    reply = format_ambiguous_result(
+        "\u82f9\u679c17",
+        [
+            {"label": "iPhone 17", "meta": "\u82f9\u679c / iPhone 17"},
+            {
+                "label": "Apple\u539f\u88c5\u4fdd\u62a4\u58f3",
+                "meta": "\u82f9\u679c / Apple \u914d\u4ef6",
+            },
+        ],
+    )
+
+    assert "2. Apple\u539f\u88c5\u4fdd\u62a4\u58f3\uff08\u82f9\u679c / Apple \u914d\u4ef6\uff09" in reply
+    assert "pro max" in reply
+    assert "\u4e0d\u8981\u8702\u7a9d" in reply
+
+
+def test_candidate_followup_hint_guides_user_to_pick_model_before_capacity():
+    reply = format_candidate_followup_hint(query="512", candidate_count=3)
+
+    assert "3 个候选里" in reply
+    assert "先回数字会最快" in reply
+    assert "先锁定具体机型后再补" in reply
+
+
+def test_workflow_can_narrow_pending_candidates_with_textual_followup(tmp_path: Path):
+    query = FakeQueryService()
+    workflow = WechatOfficialWorkflow(query_service=query, state_dir=tmp_path / "workflow-textual-choice")
+
+    first = workflow.handle_text_message(make_text_message("苹果17"))
+    assert "iPhone 17 Pro Max" in first
+
+    search_count_before_followup = len(query.search_calls)
+    second = workflow.handle_text_message(make_text_message("pro max"))
+
+    assert "iPhone 17 Pro Max" in second
+    assert "9540-9560" in second
+    assert len(query.search_calls) == search_count_before_followup
+
+
+def test_workflow_can_narrow_watch_candidates_without_cellular(tmp_path: Path):
+    query = FakeQueryService()
+    workflow = WechatOfficialWorkflow(query_service=query, state_dir=tmp_path / "workflow-watch-narrow")
+
+    first = workflow.handle_text_message(make_text_message("Apple Watch S11"))
+    assert "Series 11 GPS+蜂窝" in first
+
+    second = workflow.handle_text_message(make_text_message("不要蜂窝"))
+
+    assert "1. Series 11 GPS" in second
+    assert "2. SE3 GPS(2025款)" in second
+    assert "Series 11 GPS+蜂窝" not in second
+
+    session = workflow.session_store.load("user-open-id")
+    assert [item["label"] for item in session.pending_candidates] == [
+        "Series 11 GPS",
+        "SE3 GPS(2025款)",
+    ]
+
+
+def test_workflow_guides_capacity_only_followup_before_candidate_selection(tmp_path: Path):
+    query = FakeQueryService()
+    workflow = WechatOfficialWorkflow(query_service=query, state_dir=tmp_path / "workflow-capacity-hint")
+
+    first = workflow.handle_text_message(make_text_message("苹果17"))
+    assert "iPhone 17 Pro Max" in first
+
+    search_count_before_followup = len(query.search_calls)
+    second = workflow.handle_text_message(make_text_message("512"))
+
+    assert "先回数字会最快" in second
+    assert "先锁定具体机型后再补" in second
+    assert len(query.search_calls) == search_count_before_followup
 
 
 def test_response_layer_refinement_consumes_backend_snapshot_contract():
